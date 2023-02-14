@@ -1,0 +1,50 @@
+services:
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      target: frontend
+    working_dir: /app
+    volumes:
+      - ./frontend/turbopack:/app
+    tty: true
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+  reverse_proxy:
+    container_name: reverse_proxy
+    build:
+      context: ./reverse_proxy
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+    working_dir: /app
+    volumes:
+      - ./backend/app:/app
+    tty: true
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+  db:
+    container_name: db
+    image: postgres:15.1-alpine3.17
+    restart: always
+    ports:
+      - '5432:5432'
+    volumes:
+      - db-volume:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    healthcheck:
+      test: "exit 0"
+volumes:
+  db-volume:
